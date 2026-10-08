@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+      - uses: Swatinem/rust-cache@v2
+      - name: Test workspace
+        run: cargo test --workspace --all-targets
+      - name: Install Stellar CLI
+        run: cargo install stellar-cli --locked
+      - name: Build Soroban contracts
+        run: |
+          stellar contract build --package vault_core --target wasm32v1-none
+          stellar contract build --package stream_factory --target wasm32v1-none
