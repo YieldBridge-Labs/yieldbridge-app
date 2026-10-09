@@ -1,0 +1,9 @@
+{
+  "name": "yieldbridge-app-workspace",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "build": "pnpm --recursive build",
+    "test": "pnpm --recursive test"
+  }
+}
