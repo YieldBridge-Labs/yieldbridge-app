@@ -7,15 +7,15 @@ export function ClaimAction() {
   const { address, isConnected, connect } = useWallet();
   const {
     claimableYield,
-    isClaiming,
-    claimError,
-    claimTxHash,
+    isSubmitting,
+    actionError,
+    lastTxHash,
     executeClaim,
     formatTokenAmount,
   } = useVault();
 
   const formattedAmount = formatTokenAmount(claimableYield);
-  const canClaim = isConnected && claimableYield > 0n && !isClaiming;
+  const canClaim = isConnected && claimableYield > 0n && !isSubmitting;
 
   const handleClaim = async () => {
     if (!isConnected) {
@@ -42,17 +42,17 @@ export function ClaimAction() {
         Yield streams continuously to your share weight. Claim settled tokens directly to your connected Freighter wallet via the Soroban <code>claim</code> contract invocation.
       </p>
 
-      {claimError && (
+      {actionError && (
         <div className="claim-alert alert-error" role="alert">
           <span className="alert-icon" aria-hidden="true">⚠</span>
           <div className="alert-content">
             <strong>Claim Failed</strong>
-            <p>{claimError}</p>
+            <p>{actionError}</p>
           </div>
         </div>
       )}
 
-      {claimTxHash && (
+      {lastTxHash && (
         <div className="claim-alert alert-success" role="status">
           <span className="alert-icon" aria-hidden="true">✓</span>
           <div className="alert-content">
@@ -60,12 +60,12 @@ export function ClaimAction() {
             <p>
               Transaction hash:{' '}
               <a
-                href={`https://stellar.expert/explorer/testnet/tx/${claimTxHash}`}
+                href={`https://stellar.expert/explorer/testnet/tx/${lastTxHash}`}
                 target="_blank"
                 rel="noreferrer"
                 className="explorer-link"
               >
-                {claimTxHash.slice(0, 10)}…{claimTxHash.slice(-8)} ↗
+                {lastTxHash.slice(0, 10)}…{lastTxHash.slice(-8)} ↗
               </a>
             </p>
           </div>
@@ -79,7 +79,7 @@ export function ClaimAction() {
           onClick={handleClaim}
           disabled={!isConnected ? false : !canClaim}
         >
-          {isClaiming ? (
+          {isSubmitting ? (
             <>
               <span className="spinner-dot" />
               <span>Submitting Claim to Soroban RPC…</span>

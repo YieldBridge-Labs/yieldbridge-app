@@ -7,6 +7,7 @@ import { InvestorDashboard } from './components/InvestorDashboard';
 import { StreamProgress } from './components/StreamProgress';
 import { ClaimAction } from './components/ClaimAction';
 import { WeightsConfig } from './components/WeightsConfig';
+import { AdminActions } from './components/AdminActions';
 import { VaultSelector } from './components/VaultSelector';
 
 function DashboardContent() {
@@ -47,6 +48,9 @@ function DashboardContent() {
 
       {/* Administrator Share Weights Section */}
       <WeightsConfig />
+
+      {/* Administrator Invocations Section */}
+      <AdminActions />
 
       {/* Activity Section */}
       <section className="activity-section">

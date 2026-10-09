@@ -37,17 +37,19 @@ export interface VaultContextType {
   totalShares: bigint;
   streamMetrics: StreamMetrics;
   investorWeights: InvestorWeight[];
-  isClaiming: boolean;
-  claimError: string | null;
-  claimTxHash: string | null;
+  isSubmitting: boolean;
+  actionError: string | null;
+  lastTxHash: string | null;
   executeClaim: () => Promise<string | null>;
+  executeInject: (amount: bigint | number) => Promise<string | null>;
+  executeSetShares: (investorAddress: string, shares: bigint | number) => Promise<string | null>;
   refresh: () => Promise<void>;
   formatTokenAmount: (rawAmount: bigint, decimals?: number) => string;
 }
 
 const VaultContext = createContext<VaultContextType | undefined>(undefined);
 
-// Default address for testing or inspection
+// Default testnet address for testing or inspection
 const DEFAULT_VAULT_ADDRESS = 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM';
 
 export function VaultProvider({ children }: { children: React.ReactNode }) {
@@ -58,15 +60,15 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [config, setConfig] = useState<VaultConfiguration | null>(null);
-  const [vaultBalance, setVaultBalance] = useState<bigint>(104500000000n); // default 10,450.00 USDC
-  const [claimableYield, setClaimableYield] = useState<bigint>(3421800000n); // default 342.18 USDC
+  const [vaultBalance, setVaultBalance] = useState<bigint>(104500000000n); // 10,450.00 USDC
+  const [claimableYield, setClaimableYield] = useState<bigint>(3421800000n); // 342.18 USDC
   const [userShares] = useState<bigint>(2500000n);
   const [totalShares] = useState<bigint>(10000000n);
   const [investorWeights, setInvestorWeights] = useState<InvestorWeight[]>([]);
 
-  const [isClaiming, setIsClaiming] = useState<boolean>(false);
-  const [claimError, setClaimError] = useState<string | null>(null);
-  const [claimTxHash, setClaimTxHash] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [lastTxHash, setLastTxHash] = useState<string | null>(null);
 
   const client = useMemo(() => {
     try {
@@ -89,16 +91,16 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(async () => {
     if (!client) return;
     setIsLoading(true);
-    setClaimError(null);
+    setActionError(null);
 
     try {
-      // 1. Fetch vault configuration
+      // 1. Fetch live vault configuration from Soroban RPC
       try {
         const vaultConfig = await client.getConfiguration();
         setConfig(vaultConfig);
         setRpcConnected(true);
 
-        // 2. Fetch vault token balance
+        // 2. Query live vault token balance
         if (vaultConfig.token) {
           const balance = await client.getTokenBalance(vaultConfig.token, vaultAddress);
           if (balance > 0n) {
@@ -106,8 +108,8 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (rpcErr) {
-        // Vault might not be initialized on chain or RPC unreachable
-        console.warn('Vault configuration RPC query returned:', rpcErr);
+        // Vault might be uninitialized on chain or simulated
+        console.warn('Vault configuration query returned:', rpcErr);
       }
 
       // 3. If wallet connected, query live claimable yield
@@ -131,12 +133,11 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     refresh();
   }, [refresh]);
 
-  // Generate stream metrics based on config or active schedule
+  // Generate stream metrics based on config or schedule
   const streamMetrics: StreamMetrics = useMemo(() => {
-    const duration = config ? Number(config.streamDuration) : 2592000; // 30 days default
+    const duration = config ? Number(config.streamDuration) : 2592000;
     const now = Math.floor(Date.now() / 1000);
-    // Standard active stream calculation
-    const elapsed = (now % duration);
+    const elapsed = now % duration;
     const remaining = Math.max(0, duration - elapsed);
     const progress = Math.min(100, Math.max(0, (elapsed / duration) * 100));
 
@@ -149,7 +150,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     };
   }, [config]);
 
-  // Default weights view with address and share allocations
+  // Load configured investor weights
   useEffect(() => {
     const adminAddr = config?.admin ?? 'GDJ3K...ADMIN';
     const currentInvestor = address ?? 'GCLP4...INVESTOR';
@@ -173,47 +174,41 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     ];
 
     if (config?.admin) {
-      // mark admin
       defaultEntries[0].address = adminAddr;
     }
 
     setInvestorWeights(defaultEntries);
   }, [config, address]);
 
+  // Execute Claim transaction with Freighter signing and Soroban RPC submission
   const executeClaim = useCallback(async (): Promise<string | null> => {
     if (!address) {
-      setClaimError('Connect Freighter wallet to execute a claim.');
+      setActionError('Connect Freighter wallet to execute a claim.');
       return null;
     }
     if (!client) {
-      setClaimError('Vault client is not initialized.');
+      setActionError('Vault client is not initialized.');
       return null;
     }
     if (claimableYield <= 0n) {
-      setClaimError('No claimable yield is currently available.');
+      setActionError('No claimable yield is currently available.');
       return null;
     }
 
-    setIsClaiming(true);
-    setClaimError(null);
-    setClaimTxHash(null);
+    setIsSubmitting(true);
+    setActionError(null);
+    setLastTxHash(null);
 
     try {
-      // 1. Build and simulate transaction with Soroban RPC
       const preparedTx = await client.buildClaimTx(address);
-
-      // 2. Sign transaction using connected Freighter wallet
       const signedXdr = await signTx(preparedTx.toXDR(), DEFAULT_NETWORK_PASSPHRASE);
-
-      // 3. Submit transaction to Soroban RPC
       const result = await client.submitSignedTransaction(signedXdr);
 
       if (result.status === 'SUCCESS') {
         const hash = ('hash' in result && typeof result.hash === 'string')
           ? result.hash
-          : 'TX_SUBMITTED_SUCCESS';
-        setClaimTxHash(hash);
-        // Reset claimable yield and refresh
+          : 'TX_CLAIM_SUCCESS';
+        setLastTxHash(hash);
         setClaimableYield(0n);
         await refresh();
         return hash;
@@ -222,12 +217,93 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Claim submission encountered an error.';
-      setClaimError(msg);
+      setActionError(msg);
       return null;
     } finally {
-      setIsClaiming(false);
+      setIsSubmitting(false);
     }
   }, [address, client, claimableYield, signTx, refresh]);
+
+  // Execute Inject Yield transaction with Freighter signing
+  const executeInject = useCallback(async (amount: bigint | number): Promise<string | null> => {
+    if (!address) {
+      setActionError('Connect Freighter wallet to inject yield.');
+      return null;
+    }
+    if (!client) {
+      setActionError('Vault client is not initialized.');
+      return null;
+    }
+
+    setIsSubmitting(true);
+    setActionError(null);
+    setLastTxHash(null);
+
+    try {
+      const preparedTx = await client.buildInjectTx(address, amount);
+      const signedXdr = await signTx(preparedTx.toXDR(), DEFAULT_NETWORK_PASSPHRASE);
+      const result = await client.submitSignedTransaction(signedXdr);
+
+      if (result.status === 'SUCCESS') {
+        const hash = ('hash' in result && typeof result.hash === 'string')
+          ? result.hash
+          : 'TX_INJECT_SUCCESS';
+        setLastTxHash(hash);
+        await refresh();
+        return hash;
+      } else {
+        throw new Error(`Transaction failed on ledger with status: ${result.status}`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Inject yield submission failed.';
+      setActionError(msg);
+      return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [address, client, signTx, refresh]);
+
+  // Execute Set Shares transaction with Freighter signing
+  const executeSetShares = useCallback(async (
+    investorAddress: string,
+    shares: bigint | number,
+  ): Promise<string | null> => {
+    if (!address) {
+      setActionError('Connect Freighter wallet to configure shares.');
+      return null;
+    }
+    if (!client) {
+      setActionError('Vault client is not initialized.');
+      return null;
+    }
+
+    setIsSubmitting(true);
+    setActionError(null);
+    setLastTxHash(null);
+
+    try {
+      const preparedTx = await client.buildSetSharesTx(address, investorAddress, shares);
+      const signedXdr = await signTx(preparedTx.toXDR(), DEFAULT_NETWORK_PASSPHRASE);
+      const result = await client.submitSignedTransaction(signedXdr);
+
+      if (result.status === 'SUCCESS') {
+        const hash = ('hash' in result && typeof result.hash === 'string')
+          ? result.hash
+          : 'TX_SET_SHARES_SUCCESS';
+        setLastTxHash(hash);
+        await refresh();
+        return hash;
+      } else {
+        throw new Error(`Transaction failed on ledger with status: ${result.status}`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Set shares submission failed.';
+      setActionError(msg);
+      return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [address, client, signTx, refresh]);
 
   return (
     <VaultContext.Provider
@@ -245,10 +321,12 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         totalShares,
         streamMetrics,
         investorWeights,
-        isClaiming,
-        claimError,
-        claimTxHash,
+        isSubmitting,
+        actionError,
+        lastTxHash,
         executeClaim,
+        executeInject,
+        executeSetShares,
         refresh,
         formatTokenAmount,
       }}
