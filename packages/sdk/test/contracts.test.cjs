@@ -73,11 +73,24 @@ test('StreamFactoryContract builds valid factory operations', () => {
   assert.ok(configOp.toXDR('base64').length > 0);
 });
 
-test('YieldBridgeSDK instantiates vault and factory clients', () => {
+test('YieldBridgeSDK instantiates vault and factory clients with full method suite', () => {
   const sdk = new YieldBridgeSDK();
   const vaultClient = sdk.getVault(VAULT_ADDRESS);
   const factoryClient = sdk.getFactory(FACTORY_ADDRESS);
 
   assert.equal(vaultClient.vaultAddress, VAULT_ADDRESS);
   assert.equal(factoryClient.factoryAddress, FACTORY_ADDRESS);
+
+  assert.equal(typeof vaultClient.buildInitializeTx, 'function');
+  assert.equal(typeof vaultClient.buildVaultInitializeTx, 'function');
+  assert.equal(typeof vaultClient.buildSetWeightsTx, 'function');
+  assert.equal(typeof vaultClient.buildClaimTx, 'function');
+  assert.equal(typeof vaultClient.buildInjectTx, 'function');
+  assert.equal(typeof vaultClient.buildSetSharesTx, 'function');
+  assert.equal(typeof vaultClient.getVaultState, 'function');
+  assert.equal(typeof vaultClient.getInvestorRecord, 'function');
+
+  assert.equal(typeof factoryClient.buildDeployTx, 'function');
+  assert.equal(typeof factoryClient.buildCreateVaultTx, 'function');
+  assert.equal(typeof factoryClient.submitSignedTransaction, 'function');
 });

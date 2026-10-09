@@ -23,6 +23,17 @@ export class VaultContract {
   }
 
   /**
+   * Alias for vault_core initialization with (token: Address, admin: Address, duration: u64).
+   */
+  public vaultInitialize(
+    token: string,
+    admin: string,
+    duration: bigint | number,
+  ): xdr.Operation {
+    return this.initialize(token, admin, duration);
+  }
+
+  /**
    * Initializes the vault contract with (admin: Address, token: Address, duration: u64).
    */
   public initializeWithAdmin(

@@ -9,6 +9,11 @@ import {
 } from 'stellar-sdk';
 import { VaultContract, StreamFactoryContract } from './contracts';
 import { YieldBridgeEncoders } from './encoders';
+import {
+  YieldBridgeStorage,
+  type VaultStateRecord,
+  type InvestorRecord,
+} from './storage';
 
 export const DEFAULT_SIMULATION_ACCOUNT = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF';
 export const DEFAULT_TESTNET_RPC = 'https://soroban-testnet.stellar.org';
@@ -90,6 +95,71 @@ export class VaultClient {
       return 0n;
     }
     return YieldBridgeEncoders.decodeI128(sim.result.retval);
+  }
+
+  /**
+   * Reads persistent on-chain VaultState record from Soroban ledger storage via getLedgerEntries.
+   */
+  public async getVaultState(): Promise<VaultStateRecord | null> {
+    const key = YieldBridgeStorage.buildStateLedgerKey(this.vaultAddress);
+    const resp = await this.server.getLedgerEntries(key);
+    if (!resp.entries || resp.entries.length === 0) {
+      return null;
+    }
+    const contractData = resp.entries[0].val.contractData();
+    return YieldBridgeStorage.parseVaultState(contractData.val());
+  }
+
+  /**
+   * Reads persistent on-chain Investor record from Soroban ledger storage via getLedgerEntries.
+   */
+  public async getInvestorRecord(investorAddress: string): Promise<InvestorRecord | null> {
+    const key = YieldBridgeStorage.buildInvestorLedgerKey(this.vaultAddress, investorAddress);
+    const resp = await this.server.getLedgerEntries(key);
+    if (!resp.entries || resp.entries.length === 0) {
+      return null;
+    }
+    const contractData = resp.entries[0].val.contractData();
+    return YieldBridgeStorage.parseInvestor(contractData.val());
+  }
+
+  /**
+   * Builds and simulates a prepared initialize transaction for the vault.
+   */
+  public async buildInitializeTx(
+    adminAddress: string,
+    tokenAddress: string,
+    duration: bigint | number,
+    options: { fee?: string; timeout?: number } = {},
+  ): Promise<Transaction> {
+    const op = this.contract.initializeWithAdmin(adminAddress, tokenAddress, duration);
+    return this.buildAndPrepareTransaction(adminAddress, op, options);
+  }
+
+  /**
+   * Builds and simulates a prepared vault_core initialize transaction (token, admin, duration).
+   */
+  public async buildVaultInitializeTx(
+    tokenAddress: string,
+    adminAddress: string,
+    duration: bigint | number,
+    options: { fee?: string; timeout?: number } = {},
+  ): Promise<Transaction> {
+    const op = this.contract.vaultInitialize(tokenAddress, adminAddress, duration);
+    return this.buildAndPrepareTransaction(adminAddress, op, options);
+  }
+
+  /**
+   * Builds and simulates a prepared set_weights transaction for batch weight configuration.
+   */
+  public async buildSetWeightsTx(
+    adminAddress: string,
+    addresses: string[],
+    weights: (bigint | number)[],
+    options: { fee?: string; timeout?: number } = {},
+  ): Promise<Transaction> {
+    const op = this.contract.setWeights(addresses, weights);
+    return this.buildAndPrepareTransaction(adminAddress, op, options);
   }
 
   /**
@@ -240,6 +310,63 @@ export class StreamFactoryClient {
     return YieldBridgeEncoders.decodeAddress(val);
   }
 
+  /**
+   * Builds and simulates a prepared deploy transaction to spawn a new vault via stream_factory.
+   */
+  public async buildDeployTx(
+    adminAddress: string,
+    salt: Uint8Array | Buffer | string,
+    tokenAddress: string,
+    duration: bigint | number,
+    options: { fee?: string; timeout?: number } = {},
+  ): Promise<Transaction> {
+    const op = this.contract.deploy(salt, adminAddress, tokenAddress, duration);
+    return this.buildAndPrepareTransaction(adminAddress, op, options);
+  }
+
+  /**
+   * Builds and simulates a prepared create_vault transaction on stream_factory.
+   */
+  public async buildCreateVaultTx(
+    sourceAddress: string,
+    salt: Uint8Array | Buffer | string,
+    tokenAddress: string,
+    duration: bigint | number,
+    options: { fee?: string; timeout?: number } = {},
+  ): Promise<Transaction> {
+    const op = this.contract.createVault(salt, tokenAddress, duration);
+    return this.buildAndPrepareTransaction(sourceAddress, op, options);
+  }
+
+  /**
+   * Submits a signed transaction XDR string to the Soroban RPC network
+   * and polls until finalized or failed.
+   */
+  public async submitSignedTransaction(
+    signedTxXdr: string,
+    pollIntervalMs = 1000,
+    maxWaitMs = 30000,
+  ): Promise<rpc.Api.GetTransactionResponse> {
+    const tx = new Transaction(signedTxXdr, this.networkPassphrase);
+    const response = await this.server.sendTransaction(tx);
+
+    if (response.status === 'ERROR') {
+      throw new Error(`Transaction submission error: ${JSON.stringify(response.errorResult)}`);
+    }
+
+    const hash = response.hash;
+    const start = Date.now();
+    while (Date.now() - start < maxWaitMs) {
+      const result = await this.server.getTransaction(hash);
+      if (result.status === 'SUCCESS' || result.status === 'FAILED') {
+        return result;
+      }
+      await new Promise((res) => setTimeout(res, pollIntervalMs));
+    }
+
+    throw new Error(`Transaction ${hash} polling timed out after ${maxWaitMs}ms`);
+  }
+
   protected async simulateOperation(op: xdr.Operation): Promise<rpc.Api.SimulateTransactionResponse> {
     const account = new Account(DEFAULT_SIMULATION_ACCOUNT, '0');
     const tx = new TransactionBuilder(account, {
@@ -251,6 +378,23 @@ export class StreamFactoryClient {
       .build();
 
     return this.server.simulateTransaction(tx);
+  }
+
+  protected async buildAndPrepareTransaction(
+    sourceAddress: string,
+    op: xdr.Operation,
+    options: { fee?: string; timeout?: number } = {},
+  ): Promise<Transaction> {
+    const accountResp = await this.server.getAccount(sourceAddress);
+    const tx = new TransactionBuilder(accountResp, {
+      fee: options.fee ?? '10000',
+      networkPassphrase: this.networkPassphrase,
+    })
+      .addOperation(op)
+      .setTimeout(options.timeout ?? 60)
+      .build();
+
+    return this.server.prepareTransaction(tx);
   }
 }
 
