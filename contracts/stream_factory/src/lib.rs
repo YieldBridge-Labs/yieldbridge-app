@@ -2,8 +2,15 @@
 
 //! Administrator-controlled deterministic deployment for YieldVault instances.
 
-use soroban_sdk::{contract, contracterror, contractimpl, contracttype, symbol_short, Address, BytesN, Env};
-use vault_core::YieldVaultClient;
+use soroban_sdk::{
+    Address, BytesN, Env, contract, contractclient, contracterror, contractimpl, contracttype,
+    symbol_short,
+};
+
+#[contractclient(name = "YieldVaultClient")]
+pub trait YieldVaultInterface {
+    fn initialize(env: Env, token: Address, admin: Address, stream_duration: u64);
+}
 
 const PERSISTENT_TTL_THRESHOLD: u32 = 100_000;
 const PERSISTENT_TTL_EXTEND_TO: u32 = 535_680;
@@ -41,10 +48,8 @@ impl StreamFactory {
         admin.require_auth();
         persist(&env, &admin_key, &admin);
         persist(&env, &DataKey::VaultWasmHash, &vault_wasm_hash);
-        env.events().publish(
-            (symbol_short!("init"),),
-            (admin, vault_wasm_hash),
-        );
+        env.events()
+            .publish((symbol_short!("init"),), (admin, vault_wasm_hash));
     }
 
     /// Replaces the code hash used for subsequent vault deployments.

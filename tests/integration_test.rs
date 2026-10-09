@@ -1,12 +1,18 @@
-use soroban_sdk::{testutils::Address as _, token, Address, BytesN, Env};
+use soroban_sdk::{
+    Address, BytesN, Env,
+    testutils::{Address as _, Ledger as _, storage::Persistent as _},
+    token,
+};
 use stream_factory::{StreamFactory, StreamFactoryClient};
-use vault_core::{DataKey, YieldVault, YieldVaultClient, PERSISTENT_TTL_EXTEND_TO};
+use vault_core::{DataKey, PERSISTENT_TTL_EXTEND_TO, YieldVault, YieldVaultClient};
 
 fn setup() -> (Env, Address, Address, Address) {
     let env = Env::default();
     env.mock_all_auths();
     let admin = Address::generate(&env);
-    let token_address = env.register_stellar_asset_contract(admin.clone());
+    let token_address = env
+        .register_stellar_asset_contract_v2(admin.clone())
+        .address();
     let vault_address = env.register(YieldVault, ());
     YieldVaultClient::new(&env, &vault_address).initialize(&token_address, &admin, &10);
     (env, admin, token_address, vault_address)
@@ -53,10 +59,8 @@ fn investor_entries_receive_the_configured_persistent_ttl() {
 
     let investor_key = DataKey::Investor(investor.clone());
     let state_key = DataKey::State;
-    env.as_contract(&vault_address, || {
-        env.storage().persistent().set_ttl(&investor_key, 1);
-        env.storage().persistent().set_ttl(&state_key, 1);
-    });
+    let seq = env.ledger().sequence();
+    env.ledger().set_sequence_number(seq + 450_000);
     vault.claim(&investor);
 
     let ttl = env.as_contract(&vault_address, || {

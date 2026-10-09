@@ -4,7 +4,7 @@
 //! time-based streaming of injected token rewards.
 
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, symbol_short, token, Address, Env,
+    Address, Env, contract, contracterror, contractimpl, contracttype, symbol_short, token,
 };
 
 /// Fixed-point precision used for reward-per-share and reward-rate arithmetic.
@@ -274,11 +274,9 @@ fn load_state(env: &Env) -> VaultState {
 fn store_state(env: &Env, state: &VaultState) {
     let key = DataKey::State;
     env.storage().persistent().set(&key, state);
-    env.storage().persistent().extend_ttl(
-        &key,
-        PERSISTENT_TTL_THRESHOLD,
-        PERSISTENT_TTL_EXTEND_TO,
-    );
+    env.storage()
+        .persistent()
+        .extend_ttl(&key, PERSISTENT_TTL_THRESHOLD, PERSISTENT_TTL_EXTEND_TO);
 }
 
 fn load_investor(env: &Env, address: &Address) -> Investor {
@@ -291,11 +289,9 @@ fn load_investor(env: &Env, address: &Address) -> Investor {
 fn store_investor(env: &Env, address: &Address, investor: &Investor) {
     let key = DataKey::Investor(address.clone());
     env.storage().persistent().set(&key, investor);
-    env.storage().persistent().extend_ttl(
-        &key,
-        PERSISTENT_TTL_THRESHOLD,
-        PERSISTENT_TTL_EXTEND_TO,
-    );
+    env.storage()
+        .persistent()
+        .extend_ttl(&key, PERSISTENT_TTL_THRESHOLD, PERSISTENT_TTL_EXTEND_TO);
 }
 
 fn ensure_not_entered(env: &Env, state: &VaultState) {
@@ -323,7 +319,11 @@ fn projected_reward_per_share(env: &Env, state: &VaultState) -> i128 {
     }
     let elapsed = (applicable_until - state.last_update_time) as i128;
     let emitted_scaled = checked_mul(env, elapsed, state.reward_rate_scaled);
-    checked_add(env, state.reward_per_share, emitted_scaled / state.total_shares)
+    checked_add(
+        env,
+        state.reward_per_share,
+        emitted_scaled / state.total_shares,
+    )
 }
 
 fn settle_investor(env: &Env, state: &VaultState, investor: &mut Investor) {
