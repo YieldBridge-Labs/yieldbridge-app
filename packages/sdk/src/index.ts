@@ -9,6 +9,19 @@ export {
 } from './contracts';
 
 export {
+  YieldBridgeTransactionBuilders,
+  type BaseTxParams,
+  type InitializeTxParams,
+  type VaultInitializeTxParams,
+  type SetWeightsTxParams,
+  type SetSharesTxParams,
+  type InjectTxParams,
+  type ClaimTxParams,
+  type DeployTxParams,
+  type CreateVaultTxParams,
+} from './transaction_builders';
+
+export {
   DEFAULT_SIMULATION_ACCOUNT,
   DEFAULT_TESTNET_RPC,
   DEFAULT_NETWORK_PASSPHRASE,
