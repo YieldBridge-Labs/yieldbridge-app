@@ -22,6 +22,12 @@ export {
 } from './transaction_builders';
 
 export {
+  YieldBridgeStorage,
+  type VaultStateRecord,
+  type InvestorRecord,
+} from './storage';
+
+export {
   DEFAULT_SIMULATION_ACCOUNT,
   DEFAULT_TESTNET_RPC,
   DEFAULT_NETWORK_PASSPHRASE,
