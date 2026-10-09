@@ -34,46 +34,54 @@ export function WeightsConfig() {
             </tr>
           </thead>
           <tbody>
-            {investorWeights.map((entry, idx) => {
-              const isConnectedUser = address && (entry.address.toLowerCase() === address.toLowerCase() || entry.address.startsWith(address.slice(0, 5)));
-              const isAdmin = config?.admin && entry.address.toLowerCase() === config.admin.toLowerCase();
+            {investorWeights.length === 0 ? (
+              <tr>
+                <td colSpan={4} style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--text-muted)' }}>
+                  No investor share weights currently recorded on-chain for this vault. Connect an authorized administrator wallet to assign weights in the console below.
+                </td>
+              </tr>
+            ) : (
+              investorWeights.map((entry, idx) => {
+                const isConnectedUser = address && (entry.address.toLowerCase() === address.toLowerCase() || entry.address.startsWith(address.slice(0, 5)));
+                const isAdmin = config?.admin && entry.address.toLowerCase() === config.admin.toLowerCase();
 
-              return (
-                <tr key={`${entry.address}-${idx}`} className={isConnectedUser ? 'row-highlight' : ''}>
-                  <td>
-                    <div className="investor-cell">
-                      <span className="investor-idx">#{String(idx + 1).padStart(2, '0')}</span>
-                      <code className="address-code" title={entry.address}>
-                        {entry.address.length > 16
-                          ? `${entry.address.slice(0, 8)}…${entry.address.slice(-8)}`
-                          : entry.address}
-                      </code>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="badge-group">
-                      {isAdmin && <span className="role-badge badge-admin">ADMIN</span>}
-                      {isConnectedUser && <span className="role-badge badge-you">YOUR WALLET</span>}
-                      {!isAdmin && !isConnectedUser && <span className="role-badge badge-investor">INVESTOR</span>}
-                    </div>
-                  </td>
-                  <td className="text-right">
-                    <span className="shares-value">{entry.shares.toLocaleString()}</span>
-                  </td>
-                  <td className="text-right">
-                    <div className="percent-cell">
-                      <span className="percent-number">{entry.percent.toFixed(1)}%</span>
-                      <div className="percent-bar-bg">
-                        <div
-                          className="percent-bar-fill"
-                          style={{ width: `${Math.min(100, entry.percent)}%` }}
-                        />
+                return (
+                  <tr key={`${entry.address}-${idx}`} className={isConnectedUser ? 'row-highlight' : ''}>
+                    <td>
+                      <div className="investor-cell">
+                        <span className="investor-idx">#{String(idx + 1).padStart(2, '0')}</span>
+                        <code className="address-code" title={entry.address}>
+                          {entry.address.length > 16
+                            ? `${entry.address.slice(0, 8)}…${entry.address.slice(-8)}`
+                            : entry.address}
+                        </code>
                       </div>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                    </td>
+                    <td>
+                      <div className="badge-group">
+                        {isAdmin && <span className="role-badge badge-admin">ADMIN</span>}
+                        {isConnectedUser && <span className="role-badge badge-you">YOUR WALLET</span>}
+                        {!isAdmin && !isConnectedUser && <span className="role-badge badge-investor">INVESTOR</span>}
+                      </div>
+                    </td>
+                    <td className="text-right">
+                      <span className="shares-value">{entry.shares.toLocaleString()}</span>
+                    </td>
+                    <td className="text-right">
+                      <div className="percent-cell">
+                        <span className="percent-number">{entry.percent.toFixed(1)}%</span>
+                        <div className="percent-bar-bg">
+                          <div
+                            className="percent-bar-fill"
+                            style={{ width: `${Math.min(100, entry.percent)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
