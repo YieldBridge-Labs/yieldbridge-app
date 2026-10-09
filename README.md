@@ -50,6 +50,9 @@ pnpm test
 pnpm --filter @yieldbridge/dashboard dev
 ```
 
-The SDK tests cover Soroban address and signed i128 argument encoding. The
-dashboard currently presents the investor-console layout and Freighter
-connection control; vault metrics are not yet wired to a Soroban RPC endpoint.
+The SDK provides complete roundtrip XDR argument encoders, contract call wrappers,
+dedicated transaction builders for `vault_core` and `stream_factory`, persistent ledger
+storage parsers (`VaultState`, `Investor`), and RPC query clients. The dashboard is fully
+wired to live Soroban testnet RPC endpoints (`https://soroban-testnet.stellar.org`), parses
+real-time stream progression and claimable yield balances, and binds Freighter wallet signing
+to live `claim`, `inject_yield`, and `set_shares` transaction submissions.
