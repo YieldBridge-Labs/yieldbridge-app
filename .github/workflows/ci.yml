@@ -23,7 +23,10 @@ jobs:
       - name: Test workspace contracts
         run: cargo test --workspace --all-targets
       - name: Install Stellar CLI
-        run: cargo install stellar-cli --locked
+        run: |
+          curl -sSLf https://github.com/stellar/stellar-cli/releases/download/v28.1.0/stellar-cli_28.1.0_amd64.deb -o stellar-cli.deb
+          sudo dpkg -i stellar-cli.deb
+          rm stellar-cli.deb
       - name: Build Soroban contracts
         run: |
           stellar contract build --package vault_core --target wasm32v1-none
