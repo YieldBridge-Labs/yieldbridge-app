@@ -2,3 +2,5 @@
 **/*.wasm
 **/*.optimized.wasm
 .stellar/
+**/node_modules/
+**/dist/

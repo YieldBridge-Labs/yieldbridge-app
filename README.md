@@ -36,3 +36,20 @@ The factory's vault WASM hash must refer to a previously uploaded `vault_core`
 artifact. Use a reviewed hash and controlled administrator credentials for
 production deployments. See [CONTRIBUTING.md](CONTRIBUTING.md) and
 [SECURITY.md](SECURITY.md) for repository and reporting policies.
+
+## JavaScript workspace
+
+The pnpm workspace contains `@yieldbridge/sdk` under `packages/sdk` and the
+React investor console under `apps/dashboard`. Install dependencies and run the
+workspace checks with:
+
+```sh
+pnpm install
+pnpm build
+pnpm test
+pnpm --filter @yieldbridge/dashboard dev
+```
+
+The SDK tests cover Soroban address and signed i128 argument encoding. The
+dashboard currently presents the investor-console layout and Freighter
+connection control; vault metrics are not yet wired to a Soroban RPC endpoint.
