@@ -200,7 +200,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser with Freight
 
 ## Community & Ecosystem
 
-- **Drips Wave Program:** [Drips Network Stellar Wave](https://www.drips.network/wave/stellar/repos)
+
 - **Stellar Developers:** [Stellar Developer Discord](https://discord.gg/stellardev)
 - **Documentation & Specs:** See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md)
 
