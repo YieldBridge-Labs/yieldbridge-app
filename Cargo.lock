@@ -1784,6 +1784,7 @@ name = "stream_factory"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk",
+ "vault_core",
 ]
 
 [[package]]
