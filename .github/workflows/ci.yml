@@ -29,8 +29,8 @@ jobs:
           rm stellar-cli.deb
       - name: Build Soroban contracts
         run: |
-          stellar contract build --package vault_core --target wasm32v1-none
-          stellar contract build --package stream_factory --target wasm32v1-none
+          stellar contract build --package vault_core
+          stellar contract build --package stream_factory
       - uses: pnpm/action-setup@v3
         with:
           version: 9
