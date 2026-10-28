@@ -14,7 +14,7 @@
     "@yieldbridge/sdk": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "stellar-sdk": "^12.0.0"
+    "stellar-sdk": "^13.3.0"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.3",
