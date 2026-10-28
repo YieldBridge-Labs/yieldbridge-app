@@ -13,7 +13,8 @@
   <a href="https://stellar.org"><img src="https://img.shields.io/badge/Stellar-Soroban%20SDK%20v28-blue.svg" alt="Soroban SDK 28" /></a>
   <a href="https://soroban-testnet.stellar.org"><img src="https://img.shields.io/badge/Network-Testnet%20RPC-green.svg" alt="Testnet Live" /></a>
   <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-Strict%205.x-3178c6.svg" alt="TypeScript" /></a>
-  <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-15%20App%20Router-black.svg" alt="Next.js 15" /></a>
+  <a href="https://vite.dev"><img src="https://img.shields.io/badge/Frontend-Vite%205%20%2B%20React%2018-646cff.svg" alt="Vite 5 + React 18" /></a>
+  <a href="./AUDIT_REPORT.md"><img src="https://img.shields.io/badge/Security-Audit%20Report-success.svg" alt="Security Audit" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-yellow.svg" alt="License" /></a>
 </p>
 
@@ -30,6 +31,30 @@ In traditional Web3 reward mechanisms, project treasuries distribute incentives 
 3. **Discrete Reward-Per-Share Accumulator:** Global reward per share advances with ledger time ($\Delta S = \frac{\Delta t \cdot R}{\text{total\_shares}}$). Fractional tokens accrue with 128-bit fixed-point precision, preventing retroactive dilution.
 4. **Independent, Permissionless Claims:** Investors authenticate and withdraw their vested yield directly to their connected Freighter wallet at any ledger sequence without administrator intervention.
 5. **Dynamic Governance Weight Rebalancing:** Administrators update allocations in batches or per address, immediately triggering accrual settlement for affected investors before applying new weights.
+
+---
+
+## System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Protocol["Stellar Soroban Protocol Layer"]
+        SF[stream_factory Contract] -->|Deterministic Deploy| VC[vault_core Contract]
+        Admin[Treasury Admin] -->|inject_yield token transfer| VC
+        Admin -->|set_weights batch shares| VC
+        Investor[Investor Address] -->|claim require_auth| VC
+        VC -->|extend_ttl 535,680 ledgers| Storage[(Soroban Persistent Storage)]
+        VC -->|SEP-41 transfer| Token[Stellar Asset Contract]
+    end
+
+    subgraph Client["Client SDK & Web3 Dashboard"]
+        DApp[Vite + React 18 Dashboard] -->|RPC Telemetry & Sim| SDK[@yieldbridge/sdk]
+        SDK -->|Soroban RPC Server| VC
+        Wallet[Freighter / Multi-Wallet] -->|Sign Transaction XDR| DApp
+    end
+
+    Token -->|Yield Transfer| Investor
+```
 
 ---
 
@@ -57,7 +82,7 @@ yieldbridge-app/
 │       │   └── index.ts          # Public entrypoint
 │       └── test/                 # 34 node:test suites verifying XDR & client serialization
 ├── apps/
-│   └── dashboard/                # Next.js / Vite React Investor & Admin Dashboard
+│   └── dashboard/                # Vite React Investor & Admin Dashboard
 │       ├── src/
 │       │   ├── context/
 │       │   │   ├── WalletContext.tsx # Freighter wallet connection & transaction signing
@@ -74,6 +99,10 @@ yieldbridge-app/
 │   └── integration_test.rs       # End-to-end integration test suite
 ├── Cargo.toml                    # Root Rust workspace
 ├── pnpm-workspace.yaml           # Root pnpm monorepo configuration
+├── AUDIT_REPORT.md               # Architectural audit & security review
+├── Dockerfile                    # Hardened multi-stage container build
+├── nginx.conf                    # Nginx config with strict CSP security headers
+├── .releaserc.json               # Semantic release configuration
 └── README.md
 ```
 
@@ -171,7 +200,7 @@ pnpm test
 # Build SDK package and dashboard bundle
 pnpm build
 
-# Start local Next.js / Vite development server
+# Start local Vite development server
 pnpm --filter @yieldbridge/dashboard dev
 ```
 
@@ -200,7 +229,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser with Freight
 
 ## Community & Ecosystem
 
-
+- **Security & Architectural Audit:** See [AUDIT_REPORT.md](AUDIT_REPORT.md)
 - **Stellar Developers:** [Stellar Developer Discord](https://discord.gg/stellardev)
 - **Documentation & Specs:** See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md)
 
