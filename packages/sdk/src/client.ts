@@ -2,6 +2,7 @@ import {
   Account,
   Contract,
   Networks,
+  Operation,
   Transaction,
   TransactionBuilder,
   rpc,
@@ -14,6 +15,7 @@ import {
   type VaultStateRecord,
   type InvestorRecord,
 } from './storage';
+import { decodeSorobanRpcError } from './errors';
 
 export const DEFAULT_SIMULATION_ACCOUNT = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF';
 export const DEFAULT_TESTNET_RPC = 'https://soroban-testnet.stellar.org';
@@ -211,7 +213,8 @@ export class VaultClient {
     const response = await this.server.sendTransaction(tx);
 
     if (response.status === 'ERROR') {
-      throw new Error(`Transaction submission error: ${JSON.stringify(response.errorResult)}`);
+      const decoded = decodeSorobanRpcError(response.errorResult);
+      throw new Error(`Transaction submission error: ${decoded}`);
     }
 
     const hash = response.hash;
@@ -255,6 +258,20 @@ export class VaultClient {
       .build();
 
     return this.server.prepareTransaction(tx);
+  }
+
+  /**
+   * Builds and prepares a transaction to extend the persistent TTL of a ledger entry.
+   */
+  public async buildExtendTtlTx(
+    sourceAddress: string,
+    extendTo = 535_680,
+    options: { fee?: string; timeout?: number } = {},
+  ): Promise<Transaction> {
+    const op = Operation.extendFootprintTtl({
+      extendTo,
+    });
+    return this.buildAndPrepareTransaction(sourceAddress, op, options);
   }
 }
 
@@ -351,7 +368,8 @@ export class StreamFactoryClient {
     const response = await this.server.sendTransaction(tx);
 
     if (response.status === 'ERROR') {
-      throw new Error(`Transaction submission error: ${JSON.stringify(response.errorResult)}`);
+      const decoded = decodeSorobanRpcError(response.errorResult);
+      throw new Error(`Transaction submission error: ${decoded}`);
     }
 
     const hash = response.hash;

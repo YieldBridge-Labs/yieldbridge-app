@@ -38,3 +38,9 @@ export {
   type FactoryConfiguration,
   type ClientConfig,
 } from './client';
+
+export {
+  VaultContractErrorCode,
+  FactoryContractErrorCode,
+  decodeSorobanRpcError,
+} from './errors';

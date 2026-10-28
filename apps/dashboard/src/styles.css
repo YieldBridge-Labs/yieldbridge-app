@@ -643,3 +643,393 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--mint); outline-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* ==========================================================================
+   Persona Command Centers & Topbar Navigation
+   ========================================================================== */
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.role-navigation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+
+.role-tab {
+  background: transparent;
+  border: none;
+  color: #9cb1a5;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.role-tab:hover {
+  color: #e6ede8;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.role-tab.active {
+  color: #121915;
+  background: var(--lime);
+  font-weight: 600;
+}
+
+.role-badge {
+  font-size: 9px;
+  padding: 1px 6px;
+  background: rgba(18, 25, 21, 0.2);
+  border-radius: 999px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.persona-view.fade-in {
+  animation: arrive 0.3s ease-out;
+}
+
+.wallet-type-tag {
+  background: rgba(255, 255, 255, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-right: 6px;
+}
+
+/* ==========================================================================
+   Multi-Wallet Selection Modal
+   ========================================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 12, 10, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: arrive 0.2s ease-out;
+}
+
+.modal-container {
+  background: #141b17;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 460px;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.modal-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e6ede8;
+  margin: 0;
+}
+
+.modal-subtitle {
+  font-size: 12px;
+  color: #7b8e84;
+  margin-top: 4px;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: #7b8e84;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.modal-close:hover {
+  color: #e6ede8;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.modal-error-banner {
+  background: rgba(255, 87, 87, 0.12);
+  border: 1px solid rgba(255, 87, 87, 0.3);
+  color: #ff8e8e;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+.wallet-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wallet-option-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1a231e;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.wallet-option-card:hover {
+  background: #202b25;
+  border-color: #3b5044;
+  transform: translateY(-1px);
+}
+
+.wallet-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wallet-title {
+  color: #e6ede8;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.wallet-desc {
+  color: #7b8e84;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.wallet-badge-pill {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.wallet-badge-pill.hardware {
+  background: rgba(100, 180, 255, 0.15);
+  color: #8ac4ff;
+  border: 1px solid rgba(100, 180, 255, 0.3);
+}
+
+.wallet-badge-pill.sandbox {
+  background: rgba(240, 185, 11, 0.15);
+  color: #f0b90b;
+  border: 1px solid rgba(240, 185, 11, 0.3);
+}
+
+.wallet-badge-pill.mobile {
+  background: rgba(0, 230, 153, 0.15);
+  color: #00e699;
+  border: 1px solid rgba(0, 230, 153, 0.3);
+}
+
+.wallet-select-arrow {
+  color: #7b8e84;
+  font-size: 16px;
+}
+
+.watch-address-form {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.watch-address-form label {
+  font-size: 11px;
+  color: #9cb1a5;
+  font-weight: 500;
+}
+
+.watch-address-form input {
+  background: #111714;
+  border: 1px solid var(--line);
+  color: #e6ede8;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.watch-submit-btn {
+  margin-top: 6px;
+  background: var(--lime);
+  color: #121915;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   Auditor Portal & Cryptographic Sealing
+   ========================================================================== */
+.auditor-portal {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.status-solvent {
+  color: #00e699 !important;
+}
+
+.status-insolvent {
+  color: #ff5757 !important;
+}
+
+.audit-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.audit-card {
+  background: #151d18;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.audit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #9cb1a5;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-bottom: 10px;
+}
+
+.audit-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.audit-row code {
+  color: #e6ede8;
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.crypto-sealer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 840px) {
+  .crypto-sealer-grid {
+    grid-template-columns: 1fr;
+  }
+  .role-navigation {
+    display: none;
+  }
+}
+
+.crypto-card {
+  background: #151d18;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.crypto-card h3 {
+  font-size: 15px;
+  color: #e6ede8;
+  margin: 0;
+}
+
+.card-subtext {
+  font-size: 12px;
+  color: #7b8e84;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.sealed-output-box, .unsealed-output-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.sealed-output-box label, .unsealed-output-box label {
+  font-size: 11px;
+  color: #7b8e84;
+}
+
+.sealed-output-box textarea {
+  background: #0f1512;
+  border: 1px solid var(--line);
+  color: #00e699;
+  font-family: monospace;
+  font-size: 11px;
+  padding: 10px;
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.unsealed-output-box pre {
+  background: #0f1512;
+  border: 1px solid var(--line);
+  color: #e6ede8;
+  font-family: monospace;
+  font-size: 11px;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  max-height: 200px;
+}
+
+.crypto-status-pill {
+  background: rgba(0, 230, 153, 0.1);
+  border: 1px solid rgba(0, 230, 153, 0.25);
+  color: #00e699;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
