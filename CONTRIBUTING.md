@@ -14,9 +14,9 @@ Keep contract changes focused, document storage or authorization changes, and ad
 
 ```sh
 cargo fmt --all -- --check
-cargo test --workspace --all-targets
 stellar contract build --package vault_core --target wasm32v1-none
 stellar contract build --package stream_factory --target wasm32v1-none
+cargo test --workspace --all-targets
 ```
 
 Never commit secrets, private keys, production credentials, or generated deployment artifacts. Security-sensitive changes should follow [SECURITY.md](SECURITY.md).

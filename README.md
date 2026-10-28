@@ -180,12 +180,12 @@ The dashboard connects directly to live Soroban RPC testnet nodes (`https://soro
 # Check Rust code formatting
 cargo fmt --all -- --check
 
-# Run full integration and unit tests
-cargo test --workspace --all-targets
-
-# Compile release WASM artifacts
+# Compile release WASM artifacts (required by contractimport! integration tests)
 stellar contract build --package vault_core --target wasm32v1-none
 stellar contract build --package stream_factory --target wasm32v1-none
+
+# Run full integration and unit tests
+cargo test --workspace --all-targets
 ```
 
 ### 2. TypeScript SDK & Dashboard

@@ -20,8 +20,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Check Rust formatting
         run: cargo fmt --all -- --check
-      - name: Test workspace contracts
-        run: cargo test --workspace --all-targets
       - name: Install Stellar CLI
         run: |
           curl -sSLf https://github.com/stellar/stellar-cli/releases/download/v28.1.0/stellar-cli_28.1.0_amd64.deb -o stellar-cli.deb
@@ -31,6 +29,8 @@ jobs:
         run: |
           stellar contract build --package vault_core
           stellar contract build --package stream_factory
+      - name: Test workspace contracts
+        run: cargo test --workspace --all-targets
       - uses: pnpm/action-setup@v3
         with:
           version: 9
